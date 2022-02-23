@@ -1,0 +1,70 @@
+#声明版本
+version: "3"
+services:
+  #如果要数据保留需要自己挂载目录
+  mysql:
+    #说明采用的镜像地址
+    image: cap1573/mysql:5.6
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    ports:
+      - "3307:3307"
+  #服务名称，并且这个服务名称能够在同一个网络进行访问
+  consul:
+    #说明采用的镜像地址
+    image: cap1573/consul
+    ports:
+      - "8500:8500"
+  #链路追踪
+  jaeger:
+    image: cap1573/jaeger
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+  #监控
+  prometheus:
+    image: cap1573/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+  #监控看板
+  grafana:
+    image: cap1573/grafana
+    ports:
+      - "3000:3000"
+
+  #熔断器
+  hystrix-dashboard:
+    #说明镜像名称
+    image: cap1573/hystrix-dashboard
+    ports:
+      - "9002:9002"
+  etcd:
+    image: quay.io/coreos/etcd:v3.3.12
+    container_name: etcd2
+    ports:
+      - 2379:2379
+      - 2380:2380
+    environment:
+      ETCDCTL_API: 3
+    command:
+      - "/usr/local/bin/etcd"
+      - "--name"
+      - "s1"
+      - "--data-dir"
+      - "/etcd-data"
+      - "--advertise-client-urls"
+      - "http://0.0.0.0:2379"
+      - --listen-client-urls
+      - "http://0.0.0.0:2379"
+      - "--initial-advertise-peer-urls"
+      - "http://0.0.0.0:2380"
+      - "--listen-peer-urls"
+      - "http://0.0.0.0:2380"
+      - "--initial-cluster-token"
+      - "tkn"
+      - "--initial-cluster"
+      - "s1=http://0.0.0.0:2380"
+      - "--initial-cluster-state"
+      - "new"
